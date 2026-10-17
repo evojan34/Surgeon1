@@ -1,1 +1,22 @@
 
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Android Signing & Secrets (Never commit)
+*.jks
+*.keystore
+service-account*.json
+.env
+.env.*
+!.env.example
+
+# Firebase configuration (Supply via CI Secret or local developer workstation)
+app/google-services.json
