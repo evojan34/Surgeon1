@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Language
@@ -35,24 +36,34 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.surgicalboardmaster.app.feature.auth.AuthAccountDialog
+import com.surgicalboardmaster.app.feature.auth.AuthViewModel
 import com.surgicalboardmaster.app.feature.dashboard.DashboardScreen
 import com.surgicalboardmaster.app.feature.dashboard.DashboardViewModel
+import com.surgicalboardmaster.app.feature.library.SurgicalLibraryScreen
+import com.surgicalboardmaster.app.feature.library.SurgicalLibraryViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SbmAppShell(
     dashboardViewModel: DashboardViewModel,
+    authViewModel: AuthViewModel,
+    libraryViewModel: SurgicalLibraryViewModel,
     isArabicRtl: Boolean,
     isOfflineSimulated: Boolean,
     onToggleLanguage: () -> Unit,
@@ -63,6 +74,10 @@ fun SbmAppShell(
     val scope = rememberCoroutineScope()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: SbmDestination.DASHBOARD.route
+
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val authFeedback by authViewModel.feedbackMessage.collectAsStateWithLifecycle()
+    var showAuthDialog by remember { mutableStateOf(false) }
 
     val bottomDestinations = SbmDestination.entries.filter { it.showInBottomBar }
 
@@ -172,6 +187,12 @@ fun SbmAppShell(
                                 contentDescription = "Toggle Arabic RTL / English LTR"
                             )
                         }
+                        IconButton(onClick = { showAuthDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Account & Cloud Sync"
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -215,9 +236,22 @@ fun SbmAppShell(
                     )
                 }
 
-                // Phase 4-10 Module Destinations (Structured Foundations Ready for Expansion)
+                composable(SbmDestination.SURGICAL_LIBRARY.route) {
+                    SurgicalLibraryScreen(
+                        viewModel = libraryViewModel,
+                        isArabicRtl = isArabicRtl,
+                        onStartTutorForTopic = {
+                            navigateToDestination(SbmDestination.AI_TUTOR)
+                        }
+                    )
+                }
+
+                // Remaining Phase 5-10 Module Destinations
                 SbmDestination.entries
-                    .filter { it != SbmDestination.DASHBOARD }
+                    .filter {
+                        it != SbmDestination.DASHBOARD &&
+                            it != SbmDestination.SURGICAL_LIBRARY
+                    }
                     .forEach { destination ->
                         composable(destination.route) {
                             ModuleFoundationPlaceholderScreen(
@@ -229,6 +263,21 @@ fun SbmAppShell(
                     }
             }
         }
+    }
+
+    if (showAuthDialog) {
+        AuthAccountDialog(
+            authState = authState,
+            feedbackMessage = authFeedback,
+            onSignIn = authViewModel::signIn,
+            onRegister = authViewModel::register,
+            onContinueOffline = authViewModel::switchToOfflineWorkstation,
+            onSignOut = authViewModel::signOut,
+            onDismiss = {
+                authViewModel.clearFeedback()
+                showAuthDialog = false
+            }
+        )
     }
 }
 
@@ -277,4 +326,3 @@ private fun ModuleFoundationPlaceholderScreen(
         }
     }
 }
-
