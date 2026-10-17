@@ -54,8 +54,14 @@ import com.surgicalboardmaster.app.feature.auth.AuthAccountDialog
 import com.surgicalboardmaster.app.feature.auth.AuthViewModel
 import com.surgicalboardmaster.app.feature.dashboard.DashboardScreen
 import com.surgicalboardmaster.app.feature.dashboard.DashboardViewModel
+import com.surgicalboardmaster.app.feature.exams.ExamCenterScreen
+import com.surgicalboardmaster.app.feature.exams.ExamCenterViewModel
+import com.surgicalboardmaster.app.feature.flashcards.FlashcardsScreen
+import com.surgicalboardmaster.app.feature.flashcards.FlashcardsViewModel
 import com.surgicalboardmaster.app.feature.library.SurgicalLibraryScreen
 import com.surgicalboardmaster.app.feature.library.SurgicalLibraryViewModel
+import com.surgicalboardmaster.app.feature.tutor.AiTutorScreen
+import com.surgicalboardmaster.app.feature.tutor.AiTutorViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +70,9 @@ fun SbmAppShell(
     dashboardViewModel: DashboardViewModel,
     authViewModel: AuthViewModel,
     libraryViewModel: SurgicalLibraryViewModel,
+    tutorViewModel: AiTutorViewModel,
+    examViewModel: ExamCenterViewModel,
+    flashcardsViewModel: FlashcardsViewModel,
     isArabicRtl: Boolean,
     isOfflineSimulated: Boolean,
     onToggleLanguage: () -> Unit,
@@ -240,17 +249,49 @@ fun SbmAppShell(
                     SurgicalLibraryScreen(
                         viewModel = libraryViewModel,
                         isArabicRtl = isArabicRtl,
-                        onStartTutorForTopic = {
+                        onStartTutorForTopic = { topic ->
+                            tutorViewModel.startLesson(
+                                topicId = topic.id,
+                                topicTitle = topic.title
+                            )
                             navigateToDestination(SbmDestination.AI_TUTOR)
                         }
                     )
                 }
 
-                // Remaining Phase 5-10 Module Destinations
+                composable(SbmDestination.AI_TUTOR.route) {
+                    AiTutorScreen(
+                        viewModel = tutorViewModel,
+                        isArabicRtl = isArabicRtl,
+                        onStartExamForTopic = { topicId ->
+                            examViewModel.startExam(topicId = topicId)
+                            navigateToDestination(SbmDestination.EXAM_CENTER)
+                        }
+                    )
+                }
+
+                composable(SbmDestination.EXAM_CENTER.route) {
+                    ExamCenterScreen(
+                        viewModel = examViewModel,
+                        isArabicRtl = isArabicRtl
+                    )
+                }
+
+                composable(SbmDestination.FLASHCARDS.route) {
+                    FlashcardsScreen(
+                        viewModel = flashcardsViewModel,
+                        isArabicRtl = isArabicRtl
+                    )
+                }
+
+                // Remaining Phase 7-10 Module Destinations
                 SbmDestination.entries
                     .filter {
                         it != SbmDestination.DASHBOARD &&
-                            it != SbmDestination.SURGICAL_LIBRARY
+                            it != SbmDestination.SURGICAL_LIBRARY &&
+                            it != SbmDestination.AI_TUTOR &&
+                            it != SbmDestination.EXAM_CENTER &&
+                            it != SbmDestination.FLASHCARDS
                     }
                     .forEach { destination ->
                         composable(destination.route) {
