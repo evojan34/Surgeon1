@@ -61,7 +61,8 @@ data class Topic(
     val studyStatus: StudyStatus,
     val confidenceScore: Int, // 1..5
     val lastStudiedEpochMillis: Long?,
-    val nextRevisionEpochMillis: Long?
+    val nextRevisionEpochMillis: Long?,
+    val studyNotes: String = ""
 )
 
 enum class CaseCategory {
@@ -162,4 +163,3 @@ data class DashboardSummary(
     val pendingFollowUps: List<FollowUpTask>,
     val recentCases: List<ClinicalCaseSummary>
 )
-
