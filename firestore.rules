@@ -1,1 +1,138 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasValidTimestampsOnCreate() {
+      return request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+    }
+
+    function hasValidTimestampOnUpdate() {
+      return request.resource.data.updatedAt == request.time
+          && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    // Server-only collection for live exam answer keys.
+    // Graded exclusively via authenticated Cloud Functions.
+    match /examAnswerKeys/{questionId} {
+      allow read, write: if false;
+    }
+
+    // User root profile
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidTimestampsOnCreate();
+      allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+      allow delete: if false;
+
+      // Educational Subcollections (Books, Chapters, Topics, Lessons, Progress, Flashcards)
+      match /books/{bookId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.title is string
+                      && request.resource.data.edition is string
+                      && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+
+      match /chapters/{chapterId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.bookId is string
+                      && request.resource.data.title is string
+                      && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+
+      match /topics/{topicId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.chapterId is string
+                      && request.resource.data.studyStatus in ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'NEEDS_REVISION']
+                      && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId)
+                      && request.resource.data.studyStatus in ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'NEEDS_REVISION']
+                      && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+
+      match /lessons/{lessonId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+
+      match /examAttempts/{attemptId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if false;
+      }
+
+      match /simulations/{simulationId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+
+      // Sensitive Clinical Cases (Pseudonymous identifier enforced; PII fields forbidden)
+      match /clinicalCases/{caseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.pseudonymousId is string
+                      && request.resource.data.category in ['EDUCATIONAL_DEIDENTIFIED', 'PRIVATE_CLINICAL_RECORD']
+                      && !('patientFullName' in request.resource.data)
+                      && !('nationalId' in request.resource.data)
+                      && !('phoneNumber' in request.resource.data)
+                      && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId)
+                      && !('patientFullName' in request.resource.data)
+                      && !('nationalId' in request.resource.data)
+                      && !('phoneNumber' in request.resource.data)
+                      && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+
+        // APPEND-ONLY Clinical Timeline Events
+        match /caseEvents/{eventId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId)
+                        && request.resource.data.caseId == caseId
+                        && request.resource.data.eventType in [
+                             'CLINICAL_ASSESSMENT', 'SYMPTOM_CHANGE', 'LAB_RESULT',
+                             'IMAGING_FINDING', 'PROCEDURE', 'OPERATION',
+                             'TREATMENT_CHANGE', 'POSTOP_PROGRESS', 'DISCHARGE',
+                             'FOLLOW_UP_VISIT', 'AMENDMENT'
+                           ]
+                        && request.resource.data.recordedAt == request.time;
+          // Append-only history: updates and deletions are strictly prohibited.
+          allow update, delete: if false;
+        }
+      }
+
+      // Follow-up Tasks
+      match /followUpTasks/{taskId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.caseId is string
+                      && request.resource.data.status in ['PENDING', 'COMPLETED', 'OVERDUE', 'CANCELLED']
+                      && hasValidTimestampsOnCreate();
+        allow update: if isOwner(userId) && hasValidTimestampOnUpdate();
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
 
