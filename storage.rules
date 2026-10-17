@@ -1,1 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Strictly user-isolated private attachments; maximum 15 MB per file
+    match /users/{userId}/attachments/{caseId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 15 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*|application/pdf');
+    }
+  }
+}
 
