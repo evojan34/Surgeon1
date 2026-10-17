@@ -3,6 +3,9 @@ package com.surgicalboardmaster.app.di
 import android.content.Context
 import androidx.room.Room
 import com.surgicalboardmaster.app.data.local.SbmDatabase
+import com.surgicalboardmaster.app.data.local.dao.EducationalLessonDao
+import com.surgicalboardmaster.app.data.local.dao.ExamDao
+import com.surgicalboardmaster.app.data.local.dao.FlashcardDao
 import com.surgicalboardmaster.app.data.local.dao.SurgicalLibraryDao
 import dagger.Module
 import dagger.Provides
@@ -33,5 +36,23 @@ object DatabaseModule {
     @Singleton
     fun provideSurgicalLibraryDao(database: SbmDatabase): SurgicalLibraryDao {
         return database.surgicalLibraryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEducationalLessonDao(database: SbmDatabase): EducationalLessonDao {
+        return database.educationalLessonDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideExamDao(database: SbmDatabase): ExamDao {
+        return database.examDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFlashcardDao(database: SbmDatabase): FlashcardDao {
+        return database.flashcardDao()
     }
 }
