@@ -25,31 +25,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v4
-
-      - name: Setup Gradle with Dependency Caching
+      - name: Setup Gradle (Version 8.9)
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Decode Optional Firebase Config from GitHub Secret
-        env:
-          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
-        run: |
-          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
-            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
-            echo "Restored app/google-services.json from repository secret."
-          else
-            echo "No GOOGLE_SERVICES_JSON_BASE64 secret configured; building with safe local fallback."
-          fi
+        with:
+          gradle-version: '8.9'
 
       - name: Run Kotlin Compilation & Unit Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
-
-      - name: Run Android Lint
-        run: ./gradlew lintDebug --stacktrace
+        run: gradle testDebugUnitTest --stacktrace
 
       - name: Assemble Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
