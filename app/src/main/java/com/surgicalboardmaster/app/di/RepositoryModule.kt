@@ -1,44 +1,76 @@
 package com.surgicalboardmaster.app.di
 
-import android.content.Context
-import com.surgicalboardmaster.app.data.local.dao.SurgicalLibraryDao
 import com.surgicalboardmaster.app.data.repository.FirebaseAuthRepositoryImpl
+import com.surgicalboardmaster.app.data.repository.OfflineFirstClinicalCaseRepository
 import com.surgicalboardmaster.app.data.repository.OfflineFirstDashboardRepository
+import com.surgicalboardmaster.app.data.repository.OfflineFirstExamRepository
+import com.surgicalboardmaster.app.data.repository.OfflineFirstFlashcardRepository
+import com.surgicalboardmaster.app.data.repository.OfflineFirstLessonRepository
+import com.surgicalboardmaster.app.data.repository.OfflineFirstSimulatorRepository
 import com.surgicalboardmaster.app.data.repository.OfflineFirstSurgicalLibraryRepository
 import com.surgicalboardmaster.app.domain.repository.AuthRepository
+import com.surgicalboardmaster.app.domain.repository.ClinicalCaseRepository
 import com.surgicalboardmaster.app.domain.repository.DashboardRepository
+import com.surgicalboardmaster.app.domain.repository.ExamRepository
+import com.surgicalboardmaster.app.domain.repository.FlashcardRepository
+import com.surgicalboardmaster.app.domain.repository.LessonRepository
+import com.surgicalboardmaster.app.domain.repository.SimulatorRepository
 import com.surgicalboardmaster.app.domain.repository.SurgicalLibraryRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideDashboardRepository(): DashboardRepository {
-        return OfflineFirstDashboardRepository()
-    }
+    abstract fun bindDashboardRepository(
+        impl: OfflineFirstDashboardRepository
+    ): DashboardRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideAuthRepository(
-        @ApplicationContext context: Context
-    ): AuthRepository {
-        return FirebaseAuthRepositoryImpl(context)
-    }
+    abstract fun bindAuthRepository(
+        impl: FirebaseAuthRepositoryImpl
+    ): AuthRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideSurgicalLibraryRepository(
-        libraryDao: SurgicalLibraryDao,
-        @ApplicationContext context: Context
-    ): SurgicalLibraryRepository {
-        return OfflineFirstSurgicalLibraryRepository(libraryDao, context)
-    }
+    abstract fun bindSurgicalLibraryRepository(
+        impl: OfflineFirstSurgicalLibraryRepository
+    ): SurgicalLibraryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLessonRepository(
+        impl: OfflineFirstLessonRepository
+    ): LessonRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindExamRepository(
+        impl: OfflineFirstExamRepository
+    ): ExamRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFlashcardRepository(
+        impl: OfflineFirstFlashcardRepository
+    ): FlashcardRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSimulatorRepository(
+        impl: OfflineFirstSimulatorRepository
+    ): SimulatorRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindClinicalCaseRepository(
+        impl: OfflineFirstClinicalCaseRepository
+    ): ClinicalCaseRepository
 }
