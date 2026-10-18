@@ -1,36 +1,44 @@
 package com.surgicalboardmaster.app.di
 
+import android.content.Context
+import com.surgicalboardmaster.app.data.local.dao.SurgicalLibraryDao
 import com.surgicalboardmaster.app.data.repository.FirebaseAuthRepositoryImpl
 import com.surgicalboardmaster.app.data.repository.OfflineFirstDashboardRepository
 import com.surgicalboardmaster.app.data.repository.OfflineFirstSurgicalLibraryRepository
 import com.surgicalboardmaster.app.domain.repository.AuthRepository
 import com.surgicalboardmaster.app.domain.repository.DashboardRepository
 import com.surgicalboardmaster.app.domain.repository.SurgicalLibraryRepository
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
+object RepositoryModule {
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindDashboardRepository(
-        impl: OfflineFirstDashboardRepository
-    ): DashboardRepository
+    fun provideDashboardRepository(): DashboardRepository {
+        return OfflineFirstDashboardRepository()
+    }
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindAuthRepository(
-        impl: FirebaseAuthRepositoryImpl
-    ): AuthRepository
+    fun provideAuthRepository(
+        @ApplicationContext context: Context
+    ): AuthRepository {
+        return FirebaseAuthRepositoryImpl(context)
+    }
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindSurgicalLibraryRepository(
-        impl: OfflineFirstSurgicalLibraryRepository
-    ): SurgicalLibraryRepository
+    fun provideSurgicalLibraryRepository(
+        libraryDao: SurgicalLibraryDao,
+        @ApplicationContext context: Context
+    ): SurgicalLibraryRepository {
+        return OfflineFirstSurgicalLibraryRepository(libraryDao, context)
+    }
 }
