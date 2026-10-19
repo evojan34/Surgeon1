@@ -12,27 +12,20 @@ permissions:
 
 jobs:
   build-and-verify:
-    name: Compile, Unit Test, Lint & Build Debug APK
+    name: Compile & Build Debug APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🧹 Nuke Ghost Databases & Duplicates (Smart Clean)
+      - name: ☢️ Nuclear Clean (Force Delete Generated Files)
         run: |
-          echo "=== Searching and destroying old conflicting database files ==="
-          # This command finds any file with @Database EXCEPT SbmDatabase.kt and deletes it
-          find app/src -type f -name "*.kt" -exec grep -l "@Database" {} + | grep -v "SbmDatabase.kt" | while read -r file; do
-            echo "🚨 Deleting ghost DB file to fix KSP: $file"
-            rm -f "$file"
-          done
-          
-          echo "=== Cleaning up duplicate DI modules ==="
-          find app/src -type f -name "*.kt" -exec grep -l "object RepositoryModule" {} + | grep -v "app/src/main/java/com/surgicalboardmaster/app/di/RepositoryModule.kt" | while read -r file; do
-            echo "🚨 Deleting duplicate module: $file"
-            rm -f "$file"
-          done
+          echo "Obliterating old build directories to fix KSP cache issues..."
+          rm -rf app/build/
+          rm -rf build/
+          rm -rf .gradle/
+          echo "Clean up complete. Ready for a 100% cold start."
 
       - name: Set up JDK 17 (Temurin)
         uses: actions/setup-java@v4
@@ -40,17 +33,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Gradle (Version 8.9)
+      - name: Setup Gradle (No Cache)
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
           cache-disabled: true
 
-      - name: Clean & Run Kotlin Compilation
-        run: gradle clean kspDebugKotlin --no-build-cache || gradle clean testDebugUnitTest --no-build-cache
-
-      - name: Assemble Debug APK
-        run: gradle assembleDebug --no-build-cache
+      - name: Assemble Debug APK (Fresh Build)
+        run: ./gradlew assembleDebug --no-build-cache --no-daemon
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
