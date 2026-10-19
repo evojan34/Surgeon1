@@ -27,39 +27,24 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             SbmDatabase::class.java,
-            "surgical_board_master_educational.db"
+            "sbm_database"
         )
-            .fallbackToDestructiveMigration()
-            .build()
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
-    @Singleton
-    fun provideSurgicalLibraryDao(database: SbmDatabase): SurgicalLibraryDao {
-        return database.surgicalLibraryDao()
-    }
+    fun provideSurgicalLibraryDao(db: SbmDatabase): SurgicalLibraryDao = db.surgicalLibraryDao()
 
     @Provides
-    @Singleton
-    fun provideEducationalLessonDao(database: SbmDatabase): EducationalLessonDao {
-        return database.educationalLessonDao()
-    }
+    fun provideEducationalLessonDao(db: SbmDatabase): EducationalLessonDao = db.educationalLessonDao()
 
     @Provides
-    @Singleton
-    fun provideExamDao(database: SbmDatabase): ExamDao {
-        return database.examDao()
-    }
+    fun provideExamDao(db: SbmDatabase): ExamDao = db.examDao()
 
     @Provides
-    @Singleton
-    fun provideFlashcardDao(database: SbmDatabase): FlashcardDao {
-        return database.flashcardDao()
-    }
+    fun provideFlashcardDao(db: SbmDatabase): FlashcardDao = db.flashcardDao()
 
     @Provides
-    @Singleton
-    fun provideClinicalCasesDao(database: SbmDatabase): ClinicalCasesDao {
-        return database.clinicalCasesDao()
-    }
+    fun provideClinicalCasesDao(db: SbmDatabase): ClinicalCasesDao = db.clinicalCasesDao()
 }
