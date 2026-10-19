@@ -5,52 +5,31 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.surgicalboardmaster.app.data.local.entity.ExamAttemptEntity
-import com.surgicalboardmaster.app.data.local.entity.ExamQuestionEntity
 import com.surgicalboardmaster.app.data.local.entity.FlashcardEntity
 import com.surgicalboardmaster.app.data.local.entity.LessonEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EducationalLessonDao {
+    @Query("SELECT * FROM lessons WHERE topicId = :topicId")
+    fun observeLessonsForTopic(topicId: String): Flow<List<LessonEntity>>
 
-    @Query("SELECT * FROM lessons WHERE userId = :userId ORDER BY updatedAtEpochMillis DESC")
-    fun observeSavedLessons(userId: String): Flow<List<LessonEntity>>
-
-    @Query("SELECT * FROM lessons WHERE id = :lessonId AND userId = :userId LIMIT 1")
-    suspend fun getLessonById(lessonId: String, userId: String): LessonEntity?
-
-    @Query("SELECT * FROM lessons WHERE topicId = :topicId AND userId = :userId LIMIT 1")
-    suspend fun getLessonByTopicId(topicId: String, userId: String): LessonEntity?
+    @Query("SELECT * FROM lessons WHERE id = :lessonId LIMIT 1")
+    suspend fun getLessonById(lessonId: String): LessonEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertLesson(lesson: LessonEntity)
+    suspend fun upsertLessons(lessons: List<LessonEntity>)
 
-    @Query("UPDATE lessons SET isBookmarked = :isBookmarked, updatedAtEpochMillis = :updatedAt WHERE id = :lessonId AND userId = :userId")
-    suspend fun updateBookmark(lessonId: String, userId: String, isBookmarked: Boolean, updatedAt: Long)
+    @Query("UPDATE lessons SET isBookmarked = :bookmarked WHERE id = :lessonId")
+    suspend fun setBookmark(lessonId: String, bookmarked: Boolean)
 
-    @Query("UPDATE lessons SET userPersonalNotes = :notes, updatedAtEpochMillis = :updatedAt WHERE id = :lessonId AND userId = :userId")
-    suspend fun updatePersonalNotes(lessonId: String, userId: String, notes: String, updatedAt: Long)
-
-    @Query("DELETE FROM lessons WHERE id = :lessonId AND userId = :userId")
-    suspend fun deleteLesson(lessonId: String, userId: String)
+    @Query("UPDATE lessons SET isCompleted = :completed, completedAtEpochMillis = :timestamp WHERE id = :lessonId")
+    suspend fun setCompleted(lessonId: String, completed: Boolean, timestamp: Long)
 }
 
 @Dao
 interface ExamDao {
-
-    @Query("SELECT * FROM exam_questions")
-    fun observeAllQuestions(): Flow<List<ExamQuestionEntity>>
-
-    @Query("SELECT * FROM exam_questions WHERE topicId = :topicId")
-    suspend fun getQuestionsForTopic(topicId: String): List<ExamQuestionEntity>
-
-    @Query("SELECT COUNT(*) FROM exam_questions")
-    suspend fun countQuestions(): Int
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertQuestions(questions: List<ExamQuestionEntity>)
-
-    @Query("SELECT * FROM exam_attempts WHERE userId = :userId ORDER BY completedAtEpochMillis DESC")
+    @Query("SELECT * FROM exam_attempts WHERE userId = :userId")
     fun observeExamAttempts(userId: String): Flow<List<ExamAttemptEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -59,22 +38,15 @@ interface ExamDao {
 
 @Dao
 interface FlashcardDao {
+    @Query("SELECT * FROM flashcards WHERE topicId = :topicId")
+    fun observeFlashcardsForTopic(topicId: String): Flow<List<FlashcardEntity>>
 
-    @Query("SELECT * FROM flashcards WHERE userId = :userId ORDER BY nextReviewEpochMillis ASC")
-    fun observeFlashcards(userId: String): Flow<List<FlashcardEntity>>
-
-    @Query("SELECT * FROM flashcards WHERE userId = :userId AND nextReviewEpochMillis <= :nowMillis ORDER BY nextReviewEpochMillis ASC")
-    suspend fun getDueFlashcards(userId: String, nowMillis: Long): List<FlashcardEntity>
-
-    @Query("SELECT COUNT(*) FROM flashcards WHERE userId = :userId")
-    suspend fun countFlashcards(userId: String): Int
+    @Query("SELECT * FROM flashcards WHERE nextReviewEpochMillis <= :now")
+    suspend fun getDueFlashcards(now: Long): List<FlashcardEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertFlashcards(cards: List<FlashcardEntity>)
+    suspend fun upsertFlashcards(flashcards: List<FlashcardEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertFlashcard(card: FlashcardEntity)
-
-    @Query("DELETE FROM flashcards WHERE id = :cardId AND userId = :userId")
-    suspend fun deleteFlashcard(cardId: String, userId: String)
+    suspend fun upsertFlashcard(flashcard: FlashcardEntity)
 }
