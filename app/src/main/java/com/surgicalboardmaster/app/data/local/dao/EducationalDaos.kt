@@ -4,11 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.surgicalboardmaster.app.data.local.entity.ExamAttemptEntity
 import com.surgicalboardmaster.app.data.local.entity.FlashcardEntity
 import com.surgicalboardmaster.app.data.local.entity.LessonEntity
 import kotlinx.coroutines.flow.Flow
-import kotlin.collections.List // أضفنا هذا الاستيراد للتأكيد
 
 @Dao
 interface EducationalLessonDao {
@@ -23,15 +21,6 @@ interface EducationalLessonDao {
 
     @Query("UPDATE lessons SET isBookmarked = :bookmarked WHERE id = :lessonId")
     suspend fun setBookmark(lessonId: String, bookmarked: Boolean)
-}
-
-@Dao
-interface ExamDao {
-    @Query("SELECT * FROM exam_attempts WHERE userId = :userId")
-    fun observeExamAttempts(userId: String): Flow<List<ExamAttemptEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExamAttempt(attempt: ExamAttemptEntity)
 }
 
 @Dao
