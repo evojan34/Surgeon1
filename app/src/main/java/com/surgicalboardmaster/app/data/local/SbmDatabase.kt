@@ -31,7 +31,7 @@ import com.surgicalboardmaster.app.data.local.entity.TopicEntity
         CaseTimelineEventEntity::class,
         FollowUpTaskEntity::class
     ],
-    version = 4,
+    version = 5, // تم رفع الإصدار لإجبار إعادة البناء
     exportSchema = false
 )
 abstract class SbmDatabase : RoomDatabase() {
