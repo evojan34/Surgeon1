@@ -22,9 +22,6 @@ interface EducationalLessonDao {
 
     @Query("UPDATE lessons SET isBookmarked = :bookmarked WHERE id = :lessonId")
     suspend fun setBookmark(lessonId: String, bookmarked: Boolean)
-
-    @Query("UPDATE lessons SET isCompleted = :completed, completedAtEpochMillis = :timestamp WHERE id = :lessonId")
-    suspend fun setCompleted(lessonId: String, completed: Boolean, timestamp: Long)
 }
 
 @Dao
@@ -40,9 +37,6 @@ interface ExamDao {
 interface FlashcardDao {
     @Query("SELECT * FROM flashcards WHERE topicId = :topicId")
     fun observeFlashcardsForTopic(topicId: String): Flow<List<FlashcardEntity>>
-
-    @Query("SELECT * FROM flashcards WHERE nextReviewEpochMillis <= :now")
-    suspend fun getDueFlashcards(now: Long): List<FlashcardEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertFlashcards(flashcards: List<FlashcardEntity>)
