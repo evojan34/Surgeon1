@@ -8,6 +8,7 @@ import com.surgicalboardmaster.app.data.local.entity.ExamAttemptEntity
 import com.surgicalboardmaster.app.data.local.entity.FlashcardEntity
 import com.surgicalboardmaster.app.data.local.entity.LessonEntity
 import kotlinx.coroutines.flow.Flow
+import kotlin.collections.List // أضفنا هذا الاستيراد للتأكيد
 
 @Dao
 interface EducationalLessonDao {
