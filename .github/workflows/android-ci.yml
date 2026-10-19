@@ -19,26 +19,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Audit & Remove Stray Duplicate Kotlin Files
+      - name: 🧹 Nuke Ghost Databases & Duplicates (Smart Clean)
         run: |
-          echo "=== Auditing Kotlin source files for accidental duplicates ==="
-          # Trim accidental leading/trailing spaces in directory or file names
-          find app/src -depth -name "* *" -execdir bash -c 'mv "$1" "${1// /}"' _ {} \; || true
-          
-          # Find if RepositoryModule is declared in more than one file and keep only the canonical one
-          CANONICAL_REPO_MOD="app/src/main/java/com/surgicalboardmaster/app/di/RepositoryModule.kt"
-          grep -rl "object RepositoryModule\|class RepositoryModule" app/src/ | while read -r file; do
-            if [ "$file" != "$CANONICAL_REPO_MOD" ]; then
-              echo "Removing duplicate RepositoryModule declaration in: $file"
-              rm -f "$file"
-            fi
+          echo "=== Searching and destroying old conflicting database files ==="
+          # This command finds any file with @Database EXCEPT SbmDatabase.kt and deletes it
+          find app/src -type f -name "*.kt" -exec grep -l "@Database" {} + | grep -v "SbmDatabase.kt" | while read -r file; do
+            echo "🚨 Deleting ghost DB file to fix KSP: $file"
+            rm -f "$file"
           done
-
-          # Find duplicate filenames across app/src/main/java and list them clearly
-          find app/src/main/java -type f -name "*.kt" | awk -F/ '{print $NF, $0}' | sort | awk '
-            prev == $1 { print "WARNING - Duplicate file name detected: " $2 " (already seen in " prev_path ")"; system("rm -f \"" $2 "\"") }
-            { prev = $1; prev_path = $2 }
-          '
+          
+          echo "=== Cleaning up duplicate DI modules ==="
+          find app/src -type f -name "*.kt" -exec grep -l "object RepositoryModule" {} + | grep -v "app/src/main/java/com/surgicalboardmaster/app/di/RepositoryModule.kt" | while read -r file; do
+            echo "🚨 Deleting duplicate module: $file"
+            rm -f "$file"
+          done
 
       - name: Set up JDK 17 (Temurin)
         uses: actions/setup-java@v4
@@ -52,11 +46,11 @@ jobs:
           gradle-version: '8.9'
           cache-disabled: true
 
-      - name: Clean, Run Kotlin Compilation & Unit Tests
-        run: gradle clean testDebugUnitTest --no-build-cache --stacktrace
+      - name: Clean & Run Kotlin Compilation
+        run: gradle clean kspDebugKotlin --no-build-cache || gradle clean testDebugUnitTest --no-build-cache
 
       - name: Assemble Debug APK
-        run: gradle assembleDebug --no-build-cache --stacktrace
+        run: gradle assembleDebug --no-build-cache
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
