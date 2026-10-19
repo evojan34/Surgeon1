@@ -20,47 +20,56 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
     @Binds
+    @Singleton
     abstract fun bindSurgicalLibraryRepository(
         impl: OfflineFirstSurgicalLibraryRepository
     ): SurgicalLibraryRepository
 
     @Binds
+    @Singleton
     abstract fun bindLessonRepository(
         impl: OfflineFirstLessonRepository
     ): LessonRepository
 
     @Binds
+    @Singleton
     abstract fun bindExamRepository(
         impl: OfflineFirstExamRepository
     ): ExamRepository
 
     @Binds
+    @Singleton
     abstract fun bindFlashcardRepository(
         impl: OfflineFirstFlashcardRepository
     ): FlashcardRepository
 
     @Binds
+    @Singleton
     abstract fun bindClinicalCaseRepository(
         impl: OfflineFirstClinicalCaseRepository
     ): ClinicalCaseRepository
 
     @Binds
+    @Singleton
     abstract fun bindSimulatorRepository(
         impl: OfflineFirstSimulatorRepository
     ): SimulatorRepository
 
     @Binds
+    @Singleton
     abstract fun bindDashboardRepository(
         impl: OfflineFirstDashboardRepository
     ): DashboardRepository
 
     @Binds
+    @Singleton
     abstract fun bindTutorRepository(
         impl: OfflineFirstTutorRepository
     ): TutorRepository
